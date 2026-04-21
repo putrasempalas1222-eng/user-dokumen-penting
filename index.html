@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Scanner Dokumen Penting - PT Makanpisang</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/html5-qrcode"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap');
+        
+        body { 
+            font-family: 'Plus Jakarta Sans', sans-serif; 
+            background-color: #ffffff;
+            color: #1e293b;
+            margin: 0;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        /* SEMBUNYIKAN BINGKAI BAWAAN LIBRARY */
+        #reader__scan_region svg {
+            display: none !important;
+        }
+        #reader__scan_region {
+            border: none !important;
+        }
+        #reader {
+            border: none !important;
+        }
+
+        .camera-section {
+            flex: 1;
+            padding: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+
+        #reader {
+            width: 100% !important;
+            max-width: 450px;
+            overflow: hidden;
+            border-radius: 32px !important;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            background: #f8fafc;
+        }
+
+        #reader video {
+            object-fit: cover !important;
+            border-radius: 32px !important;
+        }
+
+        #reader__dashboard, #reader__camera_selection, #reader__header_message {
+            display: none !important;
+        }
+
+        /* Garis Scan Biru */
+        .scan-line {
+            width: 100%;
+            height: 3px;
+            background: linear-gradient(to right, transparent, #2563eb, transparent);
+            position: absolute;
+            top: 0;
+            animation: scanAnim 2.5s infinite ease-in-out;
+            box-shadow: 0 0 15px #3b82f6;
+            z-index: 10;
+        }
+
+        @keyframes scanAnim {
+            0% { top: 0%; opacity: 0; }
+            50% { opacity: 1; }
+            100% { top: 100%; opacity: 0; }
+        }
+
+        .glass-card {
+            background: rgba(0, 0, 0, 0.05);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(0, 0, 0, 0.1);
+        }
+    </style>
+</head>
+<body>
+
+    <header class="p-6 flex items-center justify-between">
+        <div class="flex items-center space-x-3">
+            <div class="bg-blue-600 p-2 rounded-xl">
+                <i class="fas fa-file-shield text-white text-sm"></i>
+            </div>
+            <div>
+                <h1 class="text-lg font-extrabold tracking-tight text-slate-900 leading-none">
+                    DOKUMEN <span class="text-blue-600">PENTING</span>
+                </h1>
+                <p class="text-[10px] text-gray-500 font-bold uppercase tracking-widest mt-1">SCAN DOKUMEN PENTING</p>
+            </div>
+        </div>
+        <button onclick="location.reload()" class="w-10 h-10 rounded-xl glass-card flex items-center justify-center">
+            <i class="fas fa-sync-alt text-sm text-slate-600"></i>
+        </button>
+    </header>
+
+    <main class="camera-section">
+        <div id="reader"></div>
+        
+        <div id="overlay-ui" class="absolute inset-0 pointer-events-none flex flex-col items-center justify-center z-20">
+            <div class="w-[240px] h-[240px] rounded-[2rem] relative overflow-hidden">
+                <div class="absolute top-0 left-0 w-10 h-10 border-t-4 border-l-4 border-blue-600 rounded-tl-2xl"></div>
+                <div class="absolute top-0 right-0 w-10 h-10 border-t-4 border-r-4 border-blue-600 rounded-tr-2xl"></div>
+                <div class="absolute bottom-0 left-0 w-10 h-10 border-b-4 border-l-4 border-blue-600 rounded-bl-2xl"></div>
+                <div class="absolute bottom-0 right-0 w-10 h-10 border-b-4 border-r-4 border-blue-600 rounded-br-2xl"></div>
+                
+                <div class="scan-line"></div>
+            </div>
+            
+            <p class="mt-8 text-slate-600 text-[11px] font-bold tracking-widest uppercase bg-white/90 px-5 py-2 rounded-full border border-slate-200 shadow-sm">
+                Scan QR Dokumen
+            </p>
+        </div>
+    </main>
+
+    <footer class="p-8 flex flex-col items-center">
+        <p class="text-[10px] text-gray-400 font-bold uppercase tracking-[0.2em]">
+            Verified Security System
+        </p>
+    </footer>
+
+    <script>
+        function onScanSuccess(decodedText, decodedResult) {
+            if (navigator.vibrate) navigator.vibrate(100);
+            
+            document.getElementById('overlay-ui').innerHTML = `
+                <div class="fixed inset-0 bg-white/95 backdrop-blur-md flex flex-col items-center justify-center z-[100]">
+                    <div class="w-12 h-12 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mb-4"></div>
+                    <p class="text-blue-600 font-extrabold tracking-widest">VERIFIKASI DOKUMEN...</p>
+                </div>
+            `;
+
+            let targetUrl = "https://dokumen-penting.vercel.app/?link=" + encodeURIComponent(decodedText);
+            
+            setTimeout(() => {
+                html5QrcodeScanner.clear().then(() => {
+                    window.location.href = targetUrl;
+                }).catch(() => { 
+                    window.location.href = targetUrl; 
+                });
+            }, 600);
+        }
+
+        let html5QrcodeScanner = new Html5QrcodeScanner(
+            "reader", 
+            { 
+                fps: 25, 
+                aspectRatio: 1.0,
+                rememberLastUsedCamera: true,
+                supportedScanTypes: [Html5QrcodeScanType.SCAN_TYPE_CAMERA]
+            }, 
+            false);
+        
+        html5QrcodeScanner.render(onScanSuccess);
+
+        const cleanUI = setInterval(() => {
+            const stopBtn = document.getElementById('html5-qrcode-button-camera-stop');
+            if(stopBtn) stopBtn.style.display = 'none';
+            
+            const scanRegion = document.getElementById('reader__scan_region');
+            if(scanRegion) {
+                scanRegion.style.border = "none";
+                const scanRegionChild = scanRegion.firstChild;
+                if(scanRegionChild && scanRegionChild.style) {
+                    scanRegionChild.style.border = "none";
+                }
+            }
+        }, 100);
+
+        setTimeout(() => clearInterval(cleanUI), 3000);
+    </script>
+</body>
+</html>
