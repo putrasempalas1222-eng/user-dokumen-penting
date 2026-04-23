@@ -1,0 +1,8 @@
+
+{
+  "name": "Document Scanner Pro",
+  "description": "A professional QR code scanner to verify important documents. It scans a QR code and securely redirects to the verification link.",
+  "requestFramePermissions": [
+    "camera"
+  ]
+}
